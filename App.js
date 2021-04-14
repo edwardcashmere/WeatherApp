@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {StatusBar, Platform, Text, View, StyleSheet, ActivityIndicator } from 'react-native';
+import {StatusBar, Text, View, StyleSheet, ActivityIndicator } from 'react-native';
 import * as Location from 'expo-location';
 import WeatherInfo from "./Components/WeatherInfo";
 import UnitsPicker from "./Components/UnitPicker";
@@ -14,15 +14,41 @@ const API_KEY ="6c7dfb8e2c9513b228c770e7fc61392b";
 export default function App() {
   const [weatherData, setweatherData] = useState(null);
   const [loading, setLoading]= useState(true)
-  const [errorMsg, setErrorMsg] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(false);
   const [unitSystem, setUnitSystem] = useState('metric');
+  const [text, setText]= useState("Nairobi");
 
   useEffect(() => {
   getData()
   }, [unitSystem]);
 
+const getDataForCity =async () =>{
+
+  try {
+    setLoading(true)
+    const url = `${BASE_URL}q=${text}&units=${unitSystem}&appid=${API_KEY}`;
+    const res = await fetch(url);
+    const result = await res.json();
+  
+    if(res.ok){
+      setweatherData(result)
+      setLoading(false)
+    }else{
+      setErrorMsg(true)
+      setLoading(false)
+
+    }
+    
+  } catch (error) {
+    
+  }
+
+}
+
 const getData =async()=>{
   try {
+    setErrorMsg(false) //get around reload state change
+    setweatherData(null)
     let { status } = await Location.requestPermissionsAsync();
     if (status !== 'granted') {
       setErrorMsg('Permission to access location was denied');
@@ -38,8 +64,9 @@ const getData =async()=>{
     if(res.ok){
       setweatherData(result);
       setLoading(false);  
+      setText("")
     }else{
-      setErrorMsg(result.message)
+      setErrorMsg(true)
     }
     
   } catch (error) {
@@ -49,7 +76,34 @@ const getData =async()=>{
 
 }
 
-if(weatherData){
+//if loading is not completly done show activity indicator
+if(loading){
+  return (
+    <View style={styles.container}>
+      <ActivityIndicator size="large" color={colors.PRIMARY_COLORS}/>
+      <StatusBar style="auto"/>
+  </View>
+    )
+  
+
+}
+
+//if a request fails show the city was not found
+if(errorMsg){
+  return (
+    <View style={styles.container}>
+     < ReloadIcons load={getData}/>
+      <Text style={styles.errorMsg}>City Not Found</Text>
+      <StatusBar style="auto" />
+    </View>
+  );
+
+
+}
+
+//on successful request show the data
+
+if(!loading && weatherData){
 
   return (
     <View style={styles.container}>
@@ -57,9 +111,10 @@ if(weatherData){
       <View style={styles.main}>
          < UnitsPicker unitSystem={unitSystem} setUnitSystem={setUnitSystem}/>
          < ReloadIcons load={getData}/>
+         < SearchInput text={text} setText={setText} getDataForCity={getDataForCity}/>
          <WeatherInfo weatherData={weatherData}/>
       </View>
-< WeatherDetails weatherData={weatherData} unitSystem={unitSystem}/>
+        < WeatherDetails weatherData={weatherData} unitSystem={unitSystem}/>
     </View>
   );
 
@@ -68,7 +123,7 @@ if(weatherData){
   return (
     <View style={styles.container}>
      < ReloadIcons load={getData}/>
-      <Text >{errorMsg}</Text>
+      <Text >City Not Found</Text>
       <StatusBar style="auto" />
     </View>
   );
@@ -99,5 +154,14 @@ const styles = StyleSheet.create({
   main:{
     flex: 1,
     justifyContent: 'center'
+  },
+  errorMsg:{
+    fontSize: 40,
+     flex: 1,
+     top: 300,
+     left:40,
+     alignItems: 'center',
+     justifyContent: 'center',
+     color:colors.PRIMARY_COLORS
   }
 });
