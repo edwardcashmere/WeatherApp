@@ -6,9 +6,11 @@ import UnitsPicker from "./Components/UnitPicker";
 import ReloadIcons from "./Components/ReloadIcons";
 import {colors} from "./utils/index";
 import WeatherDetails from "./Components/WeatherDetails";
+import SearchInput from "./Components/SearchInput";
 
 const BASE_URL ="https://api.openweathermap.org/data/2.5/weather?";
-const API_KEY ="6c7dfb8e2c9513b228c770e7fc61392b"
+const API_KEY ="6c7dfb8e2c9513b228c770e7fc61392b";
+
 export default function App() {
   const [weatherData, setweatherData] = useState(null);
   const [loading, setLoading]= useState(true)
@@ -57,7 +59,7 @@ if(weatherData){
          < ReloadIcons load={getData}/>
          <WeatherInfo weatherData={weatherData}/>
       </View>
-      < WeatherDetails weatherData={weatherData}/>
+< WeatherDetails weatherData={weatherData} unitSystem={unitSystem}/>
     </View>
   );
 
@@ -65,6 +67,7 @@ if(weatherData){
 
   return (
     <View style={styles.container}>
+     < ReloadIcons load={getData}/>
       <Text >{errorMsg}</Text>
       <StatusBar style="auto" />
     </View>
